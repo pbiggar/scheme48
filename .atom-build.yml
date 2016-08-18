@@ -1,0 +1,5 @@
+cmd: stack test
+#cwd: "{PROJECT_PATH}/grains"
+errorMatch:
+  - ' *(?<file>.+\.l?hs):(?<line>\d+):(?<col>\d+):'
+  - '### Failure in: (?<name>.*)\n(?<file>.+\.l?hs):(?<line>\d+)\n(?<message>expected.*\n but got.*)'
