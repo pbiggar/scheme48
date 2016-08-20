@@ -1,4 +1,5 @@
-cmd: stack build && echo "\n\n\n" && ./scheme48 "   :"
+cmd: stack build && echo "\n\n" && ./scheme48 "'#(a '(quoted (dotted . list)) test)"
+
 #cwd: "{PROJECT_PATH}/grains"
 errorMatch:
   - ' *(?<file>.+\.l?hs):(?<line>\d+):(?<col>\d+):'

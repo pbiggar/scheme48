@@ -4,6 +4,8 @@ import Text.ParserCombinators.Parsec hiding (spaces)
 import System.Environment
 import Control.Monad
 import Numeric
+import Data.List (intersperse)
+import System.Exit as Exit
 
 data LispVal = Atom String
              | List [LispVal]
@@ -12,8 +14,22 @@ data LispVal = Atom String
              | String String
              | Character Char
              | Float Float
-             | Bool Bool deriving (Show)
+             | Bool Bool
+             | Vector [LispVal]
+             deriving (Show)
 
+
+
+showVal :: LispVal -> String
+showVal (Atom s) = s
+showVal (List ((Atom "quote"):rest:[])) = "'" ++ showVal rest
+showVal (List as) = "(" ++ (concat (intersperse " " (map showVal as))) ++ ")"
+showVal (String s) = "\"" ++ s ++ "\"" -- TODO: escape strings
+showVal (Number n) = show n
+showVal (Character c) = "\'" ++ [c]
+showVal (Vector as) = "'#(" ++ (concat (intersperse " " (map showVal as))) ++ ")"
+showVal (DottedList head tail) = "(" ++ (concat (intersperse " " (map showVal head))) ++ " . " ++ (showVal tail) ++ ")"
+showVal other = "Not supported yet: " ++ show other
 
 symbol :: Parser Char
 symbol = oneOf "!#$%&|*+-/:<=>?@^_~"
@@ -67,30 +83,70 @@ parseCharacter = do
 
 parseFloat :: Parser LispVal
 parseFloat = do
-  prefix <- many (oneOf "0123456789")
-  char '.'
-  suffix <- many (oneOf "0123456789")
-  return $ (Float . fst . head . readFloat) (prefix ++ "." ++ suffix)
+  float <- many1 (oneOf "0123456789") >> char '.' >> many1 (oneOf "0123456789")
+  return $ (Float . fst . head . readFloat) float
 
+
+-- complex: 3+4i (unless i coef is 0, or )aa
+-- real: #e1e10
+-- rational 6/10
+
+parseList :: Parser LispVal
+parseList = do
+  char '('
+  list <- sepBy parseExpr spaces
+  char ')'
+  return $ List list
+
+parseDottedList :: Parser LispVal
+parseDottedList = do
+  char '('
+  h <- endBy parseExpr spaces
+  char '.'
+  spaces
+  t <- parseExpr
+  char ')'
+  return $ DottedList h t
+
+parseQuoted :: Parser LispVal
+parseQuoted = do
+  char '\''
+  x <- parseExpr
+  return $ List [Atom "quote", x]
+
+-- #(0 (2 2 2 2) "Anna")
+parseVector :: Parser LispVal
+parseVector = do
+  char '\''
+  char '#'
+  (List list) <- parseList
+  return $ Vector list
 
 parseExpr :: Parser LispVal
 parseExpr = try parseCharacter
-        <|> parseAtom
-        <|> parseString
+        <|> try parseString
         <|> try parseOct
         <|> try parseHex
         <|> try parseFloat
-        <|> parseNumber
+        <|> try parseNumber
+        <|> try parseVector
+        <|> try parseQuoted
+        <|> try parseDottedList
+        <|> try parseList
+        <|> try parseAtom
+
 
 
 
 readExpr :: String -> String
 readExpr input = case parse parseExpr "lisp" input of
   Left err -> "No match: " ++ show err
-  Right val -> "Found value: " ++ show val
+  Right val -> "Found value: " ++ showVal val ++ "\n" ++ "(structurally: " ++ show val ++ ")"
 
 
 main :: IO ()
 main = do
   (expr:_) <- getArgs
-  putStrLn (readExpr expr)
+  putStrLn $ "Args are:    " ++ expr
+  putStrLn $ readExpr expr
+  Exit.exitFailure
