@@ -9,6 +9,7 @@ executable scheme48
       src
   build-depends:
       base
+      , parsec
   -- other-modules:
   --     Scheme48
   default-language: Haskell2010

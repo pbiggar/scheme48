@@ -1,4 +1,4 @@
-cmd: stack build && ./scheme48 4
+cmd: stack build && echo "\n\n\n" && ./scheme48 "   :"
 #cwd: "{PROJECT_PATH}/grains"
 errorMatch:
   - ' *(?<file>.+\.l?hs):(?<line>\d+):(?<col>\d+):'
