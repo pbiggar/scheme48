@@ -24,11 +24,13 @@ showVal :: LispVal -> String
 showVal (Atom s) = s
 showVal (List ((Atom "quote"):rest:[])) = "'" ++ showVal rest
 showVal (List as) = "(" ++ (concat (intersperse " " (map showVal as))) ++ ")"
-showVal (String s) = "\"" ++ s ++ "\"" -- TODO: escape strings
+showVal (String s) = show s
 showVal (Number n) = show n
 showVal (Character c) = "\'" ++ [c]
 showVal (Vector as) = "'#(" ++ (concat (intersperse " " (map showVal as))) ++ ")"
 showVal (DottedList head tail) = "(" ++ (concat (intersperse " " (map showVal head))) ++ " . " ++ (showVal tail) ++ ")"
+showVal (Bool True) = "#t"
+showVal (Bool False) = "#f"
 showVal other = "Not supported yet: " ++ show other
 
 symbol :: Parser Char

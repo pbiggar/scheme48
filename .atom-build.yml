@@ -1,4 +1,4 @@
-cmd: stack build && echo "\n\n" && ./scheme48 "'#(a '(quoted (dotted . list)) test)"
+cmd: "stack build && echo \"\n\n\" && ./scheme48 \"'#(a '(quoted (dotted . list)) \\\"string with \\\\\\\"quoted\\\\\\\" string\\\" #t #f test)\""
 
 #cwd: "{PROJECT_PATH}/grains"
 errorMatch:
