@@ -162,18 +162,39 @@ apply func args = maybe (Bool False) ($ args) (lookup func primitives)
 
 primitives :: [(String, ([LispVal] -> LispVal))]
 primitives = [
-  ("+", numericBinop (+))
-  ]
+    ("+", numericBinop (+))
+  , ("-", numericBinop (-))
+  , ("*", numericBinop (*))
+  , ("/", numericBinop div)
+  , ("mod", numericBinop mod)
+  , ("quotient", numericBinop quot)
+  , ("remainder", numericBinop rem)
+  , ("string?", isString)
+  , ("number?", isNumber)
+  , ("symbol?", isSymbol)]
+
+isSymbol :: [LispVal] -> LispVal
+isSymbol [(Atom _)] = Bool True
+isSymbol _ = Bool False
+
+isString :: [LispVal] -> LispVal
+isString [(String _)] = Bool True
+isString _ = Bool False
+
+isNumber :: [LispVal] -> LispVal
+isNumber [(Number n)] = Bool True
+isNumber _ = Bool False
+
 
 numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> LispVal
 numericBinop op params = Number $ foldl1 op $ map unpackNum params
 
 unpackNum :: LispVal -> Integer
 unpackNum (Number n) = n
-unpackNum (String s) = let parsed = reads s :: [(Integer, String)] in
-                          if null parsed
-                            then 0
-                            else fst . head $ parsed
+-- unpackNum (String s) = let parsed = reads s :: [(Integer, String)] in
+--                           if null parsed
+--                             then 0
+--                             else fst . head $ parsed
 unpackNum _ = 0
 
 
@@ -183,15 +204,19 @@ unpackNum _ = 0
 
 main :: IO ()
 main = do
-  (expr:_) <- getArgs
-  putStrLn $ "Args are:  " ++ expr
+  (expr:rest) <- getArgs
+  let debug = rest /= []
+  if debug
+    then putStrLn $ "Args are:  " ++ expr
+    else return ()
 
   let parsed = readExpr expr
-  putStrLn $ "Parsed:    " ++ (showVal parsed)
+  if debug
+    then do
+       putStrLn $ "Parsed:    " ++ (showVal parsed)
+       putStrLn $ "Structure: " ++ (show parsed)
+    else return ()
 
   let evaled = eval parsed
-  putStrLn $ "Evaled:    " ++ (showVal evaled)
-
-  putStrLn $ "Structure: " ++ (show parsed)
-  Exit.exitFailure
-  --if (showVal parsed) == expr then Exit.exitSuccess else Exit.exitFailure
+  putStrLn $ showVal evaled
+  Exit.exitSuccess

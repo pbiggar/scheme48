@@ -1,8 +1,17 @@
 #cmd: "stack build && echo \"\n\n\" && ./scheme48 \"'#(a '(quoted (dotted . list)) \\\"string with \\\\\\\"quoted\\\\\\\" string\\\" #t #f test)\""
-cmd: stack build && echo "\n\n" \
-     && ./scheme48 "(+ 2 2)"
+cmd: >
+        { stack build &&
+          echo "\n\n" &&
+          [[ x`./scheme48 "(+ 2 2)"` == x4 ]] &&
+          [[ x`./scheme48 "(symbol? 'a)"` == x#t ]] &&
+          [[ x`./scheme48 "(string? asd)"` == x#f ]];
+          [[ x`./scheme48 "(- (+ 4 6 3) 3 5 2)"` == x3 ]];
+        } && echo "success"
 
-#cwd: "{PROJECT_PATH}/grains"
+
+
+
+
 errorMatch:
   - ' *(?<file>.+\.l?hs):(?<line>\d+):(?<col>\d+):'
   - '### Failure in: (?<name>.*)\n(?<file>.+\.l?hs):(?<line>\d+)\n(?<message>expected.*\n but got.*)'
