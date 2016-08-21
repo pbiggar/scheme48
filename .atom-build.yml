@@ -1,4 +1,4 @@
-#cmd: "stack build && echo \"\n\n\" && ./scheme48 \"'#(a '(quoted (dotted . list)) \\\"string with \\\\\\\"quoted\\\\\\\" string\\\" #t #f test)\""
+#\"'#(a '(quoted (dotted . list)) \\\"string with \\\\\\\"quoted\\\\\\\" string\\\" #t #f test)\""
 cmd: >
         { stack build &&
           echo "\n\n" &&
@@ -13,5 +13,5 @@ cmd: >
 
 
 errorMatch:
-  - ' *(?<file>.+\.l?hs):(?<line>\d+):(?<col>\d+):'
+  - '(?ms)^(?<file>/.+?\.l?hs):(?<line>\d+):(?<col>\d+):$\n^(?<message> .*?)?\n^$\n'
   - '### Failure in: (?<name>.*)\n(?<file>.+\.l?hs):(?<line>\d+)\n(?<message>expected.*\n but got.*)'
