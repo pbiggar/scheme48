@@ -10,8 +10,12 @@ executable scheme48
   build-depends:
       base
       , parsec
-  -- other-modules:
-  --     Scheme48
+  other-modules:
+      AST
+      , Parser
+      , Interpreter
+      , PrettyPrinter
+      , Builtins
   default-language: Haskell2010
 
 -- library
