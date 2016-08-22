@@ -1,31 +1,22 @@
-{-# OPTIONS_GHC -fno-warn-type-defaults #-}
-
 import Control.Monad (unless)
 import System.Exit   (exitFailure)
 
-import Test.HUnit
-    ( (~:)
-    , (~=?)
-    , Counts (failures, errors)
-    , Test   (TestList)
-    , runTestTT
-    )
+import Test.Hspec
+import System.IO.Silently
+import System.Exit
 
-import Scheme48 (isLeapYear)
+import qualified Runner
+
+et l r = do
+  it ("should evaluate " ++ l ++ " to " ++ r) $ do
+    (result, _) <- capture $ Runner.run l
+    result `shouldBe` r
 
 main :: IO ()
 main = do
-         counts <- runTestTT isLeapYearTests
-         unless (failures counts == 0 && errors counts == 0) exitFailure
-
-isLeapYearTests :: Test
-isLeapYearTests = TestList $ map test cases
-  where
-    test (label, year, expected) = label ~: isLeapYear year ~=? expected
-    cases = [ ("leap year"                  , 1996, True )
-            , ("standard and odd year"      , 1997, False)
-            , ("standard even year"         , 1998, False)
-            , ("standard nineteenth century", 1900, False)
-            , ("standard eighteenth century", 1800, False)
-            , ("leap twenty fourth century" , 2400, True )
-            , ("leap y2k"                   , 2000, True ) ]
+  hspec $ do
+    describe "simple operations" $ do
+      et "(+ 2 2)" "4"
+      et "(symbol? 'a)" "#t"
+      et "(string? asd)" "#f"
+      et "(- (+ 4 6 3) 3 5 2)" "3"

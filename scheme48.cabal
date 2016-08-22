@@ -1,48 +1,38 @@
 name:           scheme48
-version:        0.0.0
+version:        0.1.0.0
 build-type:     Simple
-cabal-version:  >= 1.10
+cabal-version:  >= 1.22
 
-executable scheme48
-  main-is: Main.hs
-  hs-source-dirs:
-      src
-  build-depends:
-      base
-      , parsec
-      , mtl
-  other-modules:
-      AST
-      , Parser
-      , Interpreter
-      , PrettyPrinter
-      , Builtins
-      , Errors
+library
+  hs-source-dirs: src
+  build-depends: base
+               , parsec
+               , mtl
+  exposed-modules: AST
+                 , Builtins
+                 , Errors
+                 , Interpreter
+                 , Parser
+                 , PrettyPrinter
+                 , Runner
   default-language: Haskell2010
 
--- library
---   hs-source-dirs:
---       src
---   build-depends:
---       base
---   exposed-modules:
---       Scheme48
---   other-modules:
---       Main
---       Paths_scheme48
---   default-language: Haskell2010
---
--- test-suite test
---   type: exitcode-stdio-1.0
---   main-is: Tests.hs
---   hs-source-dirs:
---       src
---     , test
---   build-depends:
---       base
---     , scheme48
---     , HUnit
---   other-modules:
---       Main
---       Scheme48
---   default-language: Haskell2010
+executable scheme48-exe
+  main-is: Main.hs
+  hs-source-dirs: app
+  build-depends: base
+               , scheme48
+
+  default-language: Haskell2010
+
+
+test-suite test
+  type: exitcode-stdio-1.0
+  main-is: Tests.hs
+  hs-source-dirs: test
+  build-depends: base
+               , scheme48
+               , HUnit
+               , hspec
+               , silently
+  default-language: Haskell2010

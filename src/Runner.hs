@@ -1,7 +1,5 @@
-module Main where
+module Runner (run) where
 
-import System.Environment as Env
-import System.Exit as Exit
 import Control.Monad
 
 import Parser (readExpr)
@@ -10,15 +8,14 @@ import PrettyPrinter (showVal)
 import Errors (extractValue, trapError)
 
 
-main :: IO ()
-main = do
-  (expr:rest) <- Env.getArgs
-  let debug = rest /= []
+run :: String -> IO ()
+run source = do
+  let debug = False
   if debug
-    then putStrLn $ "Args are:  " ++ expr
+    then putStrLn $ "Args are:  " ++ source
     else return ()
 
-  parsed <- return $ readExpr expr
+  parsed <- return $ readExpr source
   if debug
     then do
 --       putStrLn $ "Parsed:    " ++ (extractValue $ trapError parsed)
@@ -27,5 +24,4 @@ main = do
 
 
   evaled <- return $ liftM showVal $ parsed >>= eval
-  putStrLn $ extractValue $ trapError evaled
-  Exit.exitSuccess
+  putStr $ extractValue $ trapError evaled
