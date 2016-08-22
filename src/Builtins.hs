@@ -1,7 +1,6 @@
-{-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
 module Builtins (builtins) where
 
-import Control.Monad.Error (throwError)
+import Control.Monad.Except (throwError)
 
 import AST
 import Errors

@@ -1,8 +1,7 @@
-{-# OPTIONS_GHC -fno-warn-warnings-deprecations #-}
 module Errors where
 
 import Text.ParserCombinators.Parsec (ParseError)
-import Control.Monad.Error as Error
+import Control.Monad.Except as Except
 
 import AST
 import PrettyPrinter
@@ -28,9 +27,6 @@ showError (Parser parseErr)             = "Parse error at " ++ show parseErr
 
 instance Show LispError where show = showError
 
-instance Error LispError where
-  noMsg = Default "An error has occurred"
-  strMsg = Default
 
 type ThrowsError = Either LispError
 

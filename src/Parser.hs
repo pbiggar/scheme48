@@ -1,8 +1,8 @@
-
 module Parser (readExpr) where
 
 import Text.ParserCombinators.Parsec hiding (spaces)
 import Numeric
+import Control.Monad.Except (throwError)
 
 import AST
 import Errors
