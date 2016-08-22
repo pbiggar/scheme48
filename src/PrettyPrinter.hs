@@ -1,4 +1,4 @@
-module PrettyPrinter (showVal) where
+module PrettyPrinter (showVal, unwordsList) where
 
 import AST
 
