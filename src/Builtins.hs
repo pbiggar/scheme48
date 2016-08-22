@@ -1,4 +1,4 @@
-module Builtins (builtins) where
+module Builtins (builtins, unpackBool) where
 
 import Control.Monad.Except (throwError)
 
@@ -28,6 +28,7 @@ unpackStr notString = throwError $ TypeMismatch "string" notString
 
 unpackBool :: LispVal -> ThrowsError Bool
 unpackBool (Number b) = return $ if b == 0 then False else True
+unpackBool (Bool b) = return b
 unpackBool notBool = throwError $ TypeMismatch "bool" notBool
 
 

@@ -37,3 +37,5 @@ main = do
       et "(>= 3 3)" "#t"
       et "(string=? \"test\"  \"test\")" "#t"
       et "(string<? \"abc\" \"bba\")" "#t"
+      et "(if (> 2 3) \"no\" \"yes\")" "\"yes\""
+      et "(if (= 3 3) (+ 2 3 (- 5 1)) \"unequal\")" "9"
