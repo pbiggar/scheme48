@@ -32,3 +32,8 @@ main = do
       et "\"a string\"" "\"a string\""
       et "(a '(imbalanced parens)"
        "Parse error at \"lisp\" (line 1, column 24):\nunexpected end of input\nexpecting space or \")\""
+      et "(< 2 3)" "#t"
+      et "(> 2 3)" "#f"
+      et "(>= 3 3)" "#t"
+      et "(string=? \"test\"  \"test\")" "#t"
+      et "(string<? \"abc\" \"bba\")" "#t"
