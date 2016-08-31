@@ -1,14 +1,18 @@
+{-# LANGUAGE ExistentialQuantification #-}
 module Builtins (builtins, unpackBool) where
 
-import Control.Monad.Except (throwError)
-
+import Control.Monad.Except (throwError, catchError)
+import Control.Monad (liftM)
 import AST
 import Errors
 
 
-builtins :: [(String, [LispVal] -> ThrowsError LispVal)]
-builtins = numbers ++ symbols ++ strings ++ binops
 
+builtins :: [(String, [LispVal] -> ThrowsError LispVal)]
+builtins = numbers ++ symbols ++ strings ++ binops ++ lists
+
+expectArgs :: Integer -> [LispVal] -> ThrowsError LispVal
+expectArgs args i = throwError $ NumArgs args i
 
 
 --- coersions
@@ -49,11 +53,11 @@ numbers = [
 isNumber :: [LispVal] -> ThrowsError LispVal
 isNumber [Number n] = return $ Bool True
 isNumber [_] = return $ Bool False
-isNumber ps = throwError $ NumArgs 1 ps
+isNumber ps = expectArgs 1 ps
 
 numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> ThrowsError LispVal
-numericBinop _ [] = throwError $ NumArgs  2 []
-numericBinop _ [a] = throwError $ NumArgs  2 [a]
+numericBinop _ [] = expectArgs 2 []
+numericBinop _ [a] = expectArgs 2 [a]
 numericBinop op params = mapM unpackNum params >>= return . Number . foldl1 op
 
 
@@ -65,7 +69,7 @@ strings = [
 isString :: [LispVal] -> ThrowsError LispVal
 isString [String _] = return $ Bool True
 isString [_] = return $ Bool False
-isString as = throwError $ NumArgs 1 as
+isString as = expectArgs 1 as
 
 strBoolBinop :: (String -> String -> Bool) -> [LispVal] -> ThrowsError LispVal
 
@@ -79,15 +83,15 @@ symbols = [ ("symbol?", isSymbol)
 isSymbol :: [LispVal] -> ThrowsError LispVal
 isSymbol [Atom _] = return $ Bool True
 isSymbol [_] = return $ Bool False
-isSymbol as = throwError $ NumArgs 1 as
+isSymbol as = expectArgs 1 as
 
 symbol2string :: [LispVal] -> ThrowsError LispVal
 symbol2string [Atom s] = return $ String s
-symbol2string as = throwError $ NumArgs 1 as
+symbol2string as = expectArgs 1 as
 
 string2symbol :: [LispVal] -> ThrowsError LispVal
 string2symbol [String s] = return $ Atom s
-string2symbol as = throwError $ NumArgs 1 as
+string2symbol as = expectArgs 1 as
 
 
 
@@ -124,3 +128,65 @@ boolBinop unpacker op args =
        left <- unpacker $ args !! 0
        right <- unpacker $ args !! 1
        return $ Bool $ left `op` right
+
+
+lists = [
+   ("car", car)
+ , ("cdr", cdr)
+ , ("cons", cons)
+ , ("eq?", eqv)
+ , ("eqv?", eqv)
+ , ("equal?", equal)
+ ]
+
+car :: [LispVal] -> ThrowsError LispVal
+car [List (x : _)] = return x
+car [DottedList (x : _) _] = return x
+car [badArg] = throwError $ TypeMismatch "pair" badArg
+car as = expectArgs 1 as
+
+cdr :: [LispVal] -> ThrowsError LispVal
+cdr [List (_ : xs)] = return $ List xs
+cdr [DottedList [_] x] = return x
+cdr [DottedList (_:xs) x] = return $ DottedList xs x
+cdr [badArg] = throwError $ TypeMismatch "pair" badArg
+cdr as = expectArgs 1 as
+
+cons :: [LispVal] -> ThrowsError LispVal
+cons [x1, List xs] = return $ List $ [x1] ++ xs
+cons [x, DottedList xs xlast] = return $ DottedList (x : xs) xlast
+cons [x1, x2] = return $ DottedList [x1] x2
+cons as = expectArgs 2 as
+
+eqv' :: LispVal -> LispVal -> Bool
+eqv' (Bool arg1) (Bool arg2)             = arg1 == arg2
+eqv' (Number arg1) (Number arg2)         = arg1 == arg2
+eqv' (String arg1) (String arg2)         = arg1 == arg2
+eqv' (Atom arg1) (Atom arg2)             = arg1 == arg2
+eqv' (DottedList xs x) (DottedList ys y) = eqv' (List $ xs ++ [x]) (List $ ys ++ [y])
+eqv' (List l) (List r)                   = (length l == length r) && (all (uncurry eqv') $ zip l r)
+eqv' _ _                                 = False
+
+
+eqv :: [LispVal] -> ThrowsError LispVal
+eqv [l, r] = return $ Bool $ eqv' l r
+eqv as = expectArgs 2 as
+
+
+data Unpacker = forall a. Eq a => AnyUnpacker (LispVal -> ThrowsError a)
+
+unpackEquals :: LispVal -> LispVal -> Unpacker -> ThrowsError Bool
+unpackEquals arg1 arg2 (AnyUnpacker unpacker) = do
+  unpacked1 <- unpacker arg1
+  unpacked2 <- unpacker arg2
+  return $ unpacked1 == unpacked2
+  `catchError` (const $ return False)
+
+
+equal :: [LispVal] -> ThrowsError LispVal
+equal [arg1, arg2] = do
+  primitiveEquals <- liftM or $ mapM (unpackEquals arg1 arg2)
+                     [AnyUnpacker unpackNum, AnyUnpacker unpackStr, AnyUnpacker unpackBool]
+  Bool eqvEquals <- eqv [arg1, arg2]
+  return $ Bool $ primitiveEquals || eqvEquals
+equal l = expectArgs 2 l
