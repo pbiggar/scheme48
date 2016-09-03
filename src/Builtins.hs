@@ -23,6 +23,7 @@ unpackNum lv@(String n) = let parsed = reads n in
                           then throwError $ TypeMismatch "Int" lv
                           else return $ fst $ parsed !! 0
 unpackNum (List [n]) = return 0
+unpackNum notNum = throwError $ TypeMismatch "number" notNum
 
 unpackStr :: LispVal -> ThrowsError String
 unpackStr (String s) = return s
