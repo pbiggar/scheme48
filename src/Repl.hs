@@ -2,7 +2,9 @@ module Repl (runRepl) where
 
 import           Control.Monad (liftM)
 import qualified System.IO as IO
+
 import qualified Runner as Runner
+import qualified Env
 
 
 
@@ -12,10 +14,6 @@ flushStr str = putStr str >> IO.hFlush IO.stdout
 readPrompt :: String -> IO String
 readPrompt prompt = flushStr prompt >> getLine
 
-evalAndPrint :: String -> IO ()
-evalAndPrint expr = Runner.evalString expr >>= putStrLn
-
-
 until_ :: Monad m => (a -> Bool) -> m a -> (a -> m ()) -> m ()
 until_ pred prompt action = do
    result <- prompt
@@ -24,6 +22,5 @@ until_ pred prompt action = do
       else action result >> until_ pred prompt action
 
 runRepl :: IO ()
-runRepl = until_ (== "quit")
-                 (readPrompt "Lisp>>> ")
-                 evalAndPrint
+runRepl = Env.nullEnv >>= until_ (== "quit")
+                                 (readPrompt "Lisp>>> ") . Runner.evalAndPrint

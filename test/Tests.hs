@@ -11,7 +11,7 @@ et :: String -> String -> SpecWith ()
 et l r = do
   it ("[" ++ l ++ " == " ++ r ++ "]") $ do
     (result, _) <- capture $ Runner.run l
-    result `shouldBe` r
+    result `shouldBe` (r ++ "\n")
 
 main :: IO ()
 main = do

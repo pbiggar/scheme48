@@ -1,18 +1,24 @@
-module Runner (run, evalString) where
+module Runner (run, evalString, evalAndPrint) where
 
 import           Control.Monad (liftM)
+import qualified Control.Monad.Except as Except
 
 import qualified Parser
 import qualified Interpreter
-import qualified PrettyPrinter
+import qualified PrettyPrinter as PP
 import qualified Errors
+import qualified Env
 
 
 run :: String -> IO ()
-run source = evalString source >>= putStr
+run source = Env.nullEnv >>= flip evalAndPrint source
 
-evalString :: String -> IO String
-evalString expr =
-  return $ Errors.extractValue
-         $ Errors.trapError
-            (liftM PrettyPrinter.showVal $ Parser.readExpr expr >>= Interpreter.eval)
+evalString :: Env.Env -> String -> IO String
+evalString env expr =
+  Errors.runIOThrows
+  $ liftM PP.showVal
+  $ (Errors.liftThrows $ Parser.readExpr expr)
+  >>= Interpreter.eval env
+
+evalAndPrint :: Env.Env -> String -> IO ()
+evalAndPrint env expr = evalString env expr >>= putStrLn
