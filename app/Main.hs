@@ -11,6 +11,6 @@ main = do
         args <- Env.getArgs
         case length args of
           0 -> Repl.runRepl
-          1 -> Runner.run $ args !! 0
+          1 -> Runner.runFile args
           otherwise -> putStrLn "Program takes only 0 or 1 argument"
         Exit.exitSuccess

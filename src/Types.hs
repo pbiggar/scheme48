@@ -3,6 +3,8 @@ module Types where
 
 import qualified Text.ParserCombinators.Parsec as Parsec
 import Data.IORef (IORef)
+import qualified Control.Monad.Except as Except
+import System.IO (Handle)
 
 
 data LispVal = Atom String
@@ -15,12 +17,16 @@ data LispVal = Atom String
              | Bool Bool
              | Vector [LispVal]
              | PrimitiveFunc ([LispVal] -> ThrowsError LispVal)
+             | IOFunc ([LispVal] -> IOThrowsError LispVal)
+             | Port Handle
              | Func { params :: [String],
                       vararg :: (Maybe String),
                       body :: [LispVal],
                       closure :: Env } deriving (Show)
 
-instance Show ([LispVal] -> ThrowsError LispVal) where show = \_ -> "<throws>"
+
+instance Show ([LispVal] -> ThrowsError LispVal) where show = \_ -> "<func>"
+instance Show ([LispVal] ->IOThrowsError LispVal) where show = \_ -> "<iofunc>"
 instance Show Env where show = \_ -> "<env>"
 
 
@@ -35,5 +41,7 @@ data LispError = NumArgs Integer [LispVal]
                | Default String
 
 type ThrowsError = Either LispError
+type IOThrowsError = Except.ExceptT LispError IO
+
 
 --instance Show LispVal where show = showVal

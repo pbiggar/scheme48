@@ -1,11 +1,14 @@
 {-# LANGUAGE ExistentialQuantification #-}
-module Builtins (builtins, unpackBool) where
+module Builtins (builtins, unpackBool, ioBuiltins, load) where
 
 import Control.Monad.Except (throwError, catchError)
 import Control.Monad (liftM)
-import Types
-import Errors
+import Control.Monad.IO.Class (liftIO)
+import System.IO
 
+import Types
+import Errors (liftThrows)
+import qualified Parser
 
 builtins :: [(String, [LispVal] -> ThrowsError LispVal)]
 builtins = numbers ++ symbols ++ strings ++ binops ++ lists
@@ -130,6 +133,8 @@ boolBinop unpacker op args =
        return $ Bool $ left `op` right
 
 
+
+
 lists = [
    ("car", car)
  , ("cdr", cdr)
@@ -157,6 +162,12 @@ cons [x1, List xs] = return $ List $ [x1] ++ xs
 cons [x, DottedList xs xlast] = return $ DottedList (x : xs) xlast
 cons [x1, x2] = return $ DottedList [x1] x2
 cons as = expectArgs 2 as
+
+
+
+
+
+
 
 eqv' :: LispVal -> LispVal -> Bool
 eqv' (Bool arg1) (Bool arg2)             = arg1 == arg2
@@ -190,3 +201,49 @@ equal [arg1, arg2] = do
   Bool eqvEquals <- eqv [arg1, arg2]
   return $ Bool $ primitiveEquals || eqvEquals
 equal l = expectArgs 2 l
+
+
+
+
+
+
+
+
+ioBuiltins :: [(String, [LispVal] -> IOThrowsError LispVal)]
+ioBuiltins = [--("apply", applyProc),
+              ("open-input-file", makePort ReadMode),
+              ("open-output-file", makePort WriteMode),
+              ("close-input-port", closePort),
+              ("close-output-port", closePort),
+              ("read", readProc),
+              ("write", writeProc),
+              ("read-contents", readContents),
+              ("read-all", readAll)]
+--
+-- applyProc :: [LispVal] -> IOThrowsError LispVal
+-- applyProc [func, List args] = apply func args
+-- applyProc (func : args)     = apply func args
+
+makePort :: IOMode -> [LispVal] -> IOThrowsError LispVal
+makePort mode [String filename] = liftM Port $ liftIO $ openFile filename mode
+
+closePort :: [LispVal] -> IOThrowsError LispVal
+closePort [Port port] = liftIO $ hClose port >> (return $ Bool True)
+closePort _           = return $ Bool False
+
+readProc :: [LispVal] -> IOThrowsError LispVal
+readProc []          = readProc [Port stdin]
+readProc [Port port] = (liftIO $ hGetLine port) >>= liftThrows . Parser.readExpr
+
+writeProc :: [LispVal] -> IOThrowsError LispVal
+writeProc [obj]            = writeProc [obj, Port stdout]
+writeProc [obj, Port port] = liftIO $ hPrint port obj >> (return $ Bool True)
+
+readContents :: [LispVal] -> IOThrowsError LispVal
+readContents [String filename] = liftM String $ liftIO $ readFile filename
+
+load :: String -> IOThrowsError [LispVal]
+load filename = (liftIO $ readFile filename) >>= liftThrows . Parser.readExprList
+
+readAll :: [LispVal] -> IOThrowsError LispVal
+readAll [String filename] = liftM List $ load filename

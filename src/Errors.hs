@@ -18,8 +18,6 @@ showError (Parser parseErr)             = "Parse error at " ++ show parseErr
 instance Show LispError where show = showError
 
 
-type IOThrowsError = Except.ExceptT LispError IO
-
 trapError action = Except.catchError action (return . show)
 
 extractValue :: ThrowsError a -> a

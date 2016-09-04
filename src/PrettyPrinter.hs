@@ -16,7 +16,9 @@ showVal (Vector as) = "'#(" ++ (unwordsList as) ++ ")"
 showVal (DottedList head tail) = "(" ++ (unwordsList head) ++ " . " ++ (showVal tail) ++ ")"
 showVal (Bool True) = "#t"
 showVal (Bool False) = "#f"
-showVal (PrimitiveFunc _) = "<primitive>"
+showVal (PrimitiveFunc _) = "<builtin>"
+showVal (Port _)   = "<IO port>"
+showVal (IOFunc _) = "<IO builtin>"
 showVal (Func {params = args, vararg = varargs, body = body, closure = env}) =
    "(lambda (" ++ unwords (map show args) ++
       (case varargs of

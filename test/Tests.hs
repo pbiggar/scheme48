@@ -14,7 +14,7 @@ import Types
 et :: String -> String -> SpecWith ()
 et l r = do
   it ("[" ++ l ++ " == " ++ r ++ "]") $ do
-    (result, _) <- capture $ Runner.run l
+    (result, _) <- capture $ Runner.runSource l
     result `shouldBe` (r ++ "\n")
 
 rt :: Env -> String -> String -> SpecWith ()

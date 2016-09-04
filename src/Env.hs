@@ -7,17 +7,16 @@ import Control.Monad.Except (throwError)
 import Control.Monad (liftM)
 
 import Types
-import Errors
 import qualified Builtins
 
 nullEnv :: IO Env
 nullEnv = IORef.newIORef []
 
-
 primitiveBindings :: IO Env
 primitiveBindings =
-   nullEnv >>= (flip bindVars $ map makePrimitiveFunc Builtins.builtins)
-     where makePrimitiveFunc (var, func) = (var, PrimitiveFunc func)
+  nullEnv >>= (flip bindVars $ map (makeFunc IOFunc) Builtins.ioBuiltins
+                            ++ map (makeFunc PrimitiveFunc) Builtins.builtins)
+     where makeFunc constructor (var, func) = (var, constructor func)
 
 isBound :: Env -> String -> IO Bool
 isBound envRef var =
