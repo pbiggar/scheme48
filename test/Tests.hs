@@ -27,6 +27,7 @@ main :: IO ()
 main = do
   env <- Env.primitiveBindings
   env2 <- Env.primitiveBindings
+  env3 <- Env.primitiveBindings
 
   hspec $ do
     describe "simple operations" $ do
@@ -83,3 +84,8 @@ main = do
       rt env2 "(my-count 3)" "8"
       rt env2 "(my-count 6)" "14"
       rt env2 "(my-count 5)" "19"
+
+    describe "stdlib" $ do
+      rt env3 "(load \"stdlib.scm\")" "(lambda (\"pred\"  \"lst\") ...)"
+      rt env3 "(map (curry + 2) '(1 2 3 4))" "(3 4 5 6)"
+      rt env3 "(filter even? '(1 2 3 4))" "(2 4)"
