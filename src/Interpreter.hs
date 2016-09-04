@@ -20,6 +20,10 @@ eval _ (List [Atom "quote", val]) = return val
 
 eval env (List [Atom "load", String filename]) =
   Builtins.load filename >>= liftM last . mapM (eval env)
+-- apply creates a circular depenency
+eval env (List (Atom "apply" : args)) =
+  applyProc env args
+
 eval env (List [Atom "if", pred, conseq, alt]) =
   evalIf env pred conseq alt
 
@@ -59,6 +63,11 @@ makeNormalFunc = makeFunc Nothing
 
 makeVarArgs :: LispVal -> Env -> [LispVal] -> [LispVal] -> IOThrowsError LispVal
 makeVarArgs = makeFunc . Just . PP.showVal
+
+-- Avoid a circular dependency by listing this directly here
+applyProc :: Env -> [LispVal] -> IOThrowsError LispVal
+applyProc env [func, List args] = apply env func args
+applyProc env (func : args)     = apply env func args
 
 apply :: Env -> LispVal -> [LispVal] -> IOThrowsError LispVal
 apply _ (PrimitiveFunc func) args = liftThrows $ func args
