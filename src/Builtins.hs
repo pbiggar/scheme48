@@ -3,9 +3,8 @@ module Builtins (builtins, unpackBool) where
 
 import Control.Monad.Except (throwError, catchError)
 import Control.Monad (liftM)
-import AST
+import Types
 import Errors
-
 
 
 builtins :: [(String, [LispVal] -> ThrowsError LispVal)]

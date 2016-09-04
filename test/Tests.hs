@@ -8,6 +8,8 @@ import Control.Monad (liftM)
 
 import qualified Runner
 import qualified Env
+import Types
+
 
 et :: String -> String -> SpecWith ()
 et l r = do
@@ -15,7 +17,7 @@ et l r = do
     (result, _) <- capture $ Runner.run l
     result `shouldBe` (r ++ "\n")
 
-rt :: Env.Env -> String -> String -> SpecWith ()
+rt :: Env -> String -> String -> SpecWith ()
 rt ioenv l r = do
   it ("[" ++ l ++ " == " ++ r ++ "]") $ do
     (result, _) <- capture $ Runner.evalAndPrint ioenv l
@@ -23,7 +25,9 @@ rt ioenv l r = do
 
 main :: IO ()
 main = do
-  env <- Env.nullEnv
+  env <- Env.primitiveBindings
+  env2 <- Env.primitiveBindings
+
   hspec $ do
     describe "simple operations" $ do
       et "(+ 2 2)" "4"
@@ -32,7 +36,7 @@ main = do
       et "(- (+ 4 6 3) 3 5 2)" "3"
       et "(+ 2 \"two\")" "Invalid type: expected Int, found String \"two\""
       et "(+ 2)" "Expected 2 args; found values 2"
-      et "(what? 2)" "Unrecognized primitive function: \"what?\""
+      et "(what? 2)" "Getting an unbound variable: what?"
       et "(+ 2 2)" "4"
       et "(+ 2 (- 4 1))" "5"
       et "(- (+ 4 6 3) 3 5 2)" "3"
@@ -66,3 +70,16 @@ main = do
       rt env "(define str \"A string\")" "\"A string\""
       rt env "(< str \"The string\")" "Invalid type: expected Int, found String \"A string\""
       rt env "(string<? str \"The string\")" "#t"
+
+    describe "functions" $ do
+      rt env2 "(define (f x y) (+ x y))" "(lambda (\"x\" \"y\") ...)"
+      rt env2 "(f 1 2)" "3"
+      rt env2 "(f 1 2 3)" "Expected 2 args; found values 1 2 3"
+      rt env2 "(f 1)" "Expected 2 args; found values 1"
+      rt env2 "(define (factorial x) (if (= x 1) 1 (* x (factorial (- x 1)))))" "(lambda (\"x\") ...)"
+      rt env2 "(factorial 10)" "3628800"
+      rt env2 "(define (counter inc) (lambda (x) (set! inc (+ x inc)) inc))" "(lambda (\"inc\") ...)"
+      rt env2 "(define my-count (counter 5))" "(lambda (\"x\") ...)"
+      rt env2 "(my-count 3)" "8"
+      rt env2 "(my-count 6)" "14"
+      rt env2 "(my-count 5)" "19"

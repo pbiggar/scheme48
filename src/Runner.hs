@@ -8,17 +8,21 @@ import qualified Interpreter
 import qualified PrettyPrinter as PP
 import qualified Errors
 import qualified Env
+import Types
 
 
 run :: String -> IO ()
-run source = Env.nullEnv >>= flip evalAndPrint source
+run source = Env.primitiveBindings >>= flip evalAndPrint source
 
-evalString :: Env.Env -> String -> IO String
+evalString :: Env -> String -> IO String
 evalString env expr =
   Errors.runIOThrows
   $ liftM PP.showVal
   $ (Errors.liftThrows $ Parser.readExpr expr)
   >>= Interpreter.eval env
 
-evalAndPrint :: Env.Env -> String -> IO ()
-evalAndPrint env expr = evalString env expr >>= putStrLn
+evalAndPrint :: Env -> String -> IO ()
+evalAndPrint env expr = do
+  str <- Errors.runIOThrows $ liftM show $ Errors.liftThrows $ Parser.readExpr expr
+--  putStrLn str
+  evalString env expr >>= putStrLn

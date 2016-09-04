@@ -9,8 +9,7 @@ library
                , parsec
                , mtl
                , transformers
-  exposed-modules: AST
-                 , Builtins
+  exposed-modules: Builtins
                  , Env
                  , Errors
                  , Interpreter
@@ -18,6 +17,7 @@ library
                  , PrettyPrinter
                  , Repl
                  , Runner
+                 , Types
   default-language: Haskell2010
 
 executable scheme48-exe

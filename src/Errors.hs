@@ -1,19 +1,9 @@
 module Errors where
 
-import qualified Text.ParserCombinators.Parsec as Parsec
 import qualified Control.Monad.Except as Except
 
-import AST
+import Types
 import qualified PrettyPrinter as PP
-
-data LispError = NumArgs Integer [LispVal]
-               | TypeMismatch String LispVal
-               | Parser Parsec.ParseError
-               | BadSpecialForm String LispVal
-               | NotFunction String String
-               | UnboundVar String String
-               | Default String
-
 
 showError :: LispError -> String
 showError (UnboundVar message varname)  = message ++ ": " ++ varname
@@ -28,7 +18,6 @@ showError (Parser parseErr)             = "Parse error at " ++ show parseErr
 instance Show LispError where show = showError
 
 
-type ThrowsError = Either LispError
 type IOThrowsError = Except.ExceptT LispError IO
 
 trapError action = Except.catchError action (return . show)

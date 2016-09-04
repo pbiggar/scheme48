@@ -4,7 +4,7 @@ import Text.ParserCombinators.Parsec hiding (spaces)
 import Numeric
 import Control.Monad.Except (throwError)
 
-import AST
+import Types
 import Errors
 
 symbol :: Parser Char

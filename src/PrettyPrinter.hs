@@ -1,6 +1,6 @@
 module PrettyPrinter (showVal, unwordsList) where
 
-import AST
+import Types
 
 unwordsList :: [LispVal] -> String
 unwordsList = unwords . map showVal
@@ -16,4 +16,10 @@ showVal (Vector as) = "'#(" ++ (unwordsList as) ++ ")"
 showVal (DottedList head tail) = "(" ++ (unwordsList head) ++ " . " ++ (showVal tail) ++ ")"
 showVal (Bool True) = "#t"
 showVal (Bool False) = "#f"
+showVal (PrimitiveFunc _) = "<primitive>"
+showVal (Func {params = args, vararg = varargs, body = body, closure = env}) =
+   "(lambda (" ++ unwords (map show args) ++
+      (case varargs of
+         Nothing -> ""
+         Just arg -> " . " ++ arg) ++ ") ...)"
 showVal other = "Not supported yet: " ++ show other

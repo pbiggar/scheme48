@@ -22,5 +22,5 @@ until_ pred prompt action = do
       else action result >> until_ pred prompt action
 
 runRepl :: IO ()
-runRepl = Env.nullEnv >>= until_ (== "quit")
-                                 (readPrompt "Lisp>>> ") . Runner.evalAndPrint
+runRepl = Env.primitiveBindings >>= until_ (== "quit")
+                                    (readPrompt "Lisp>>> ") . Runner.evalAndPrint
